@@ -1,11 +1,24 @@
 /* Local, word-at-a-time editing. Structural boundaries and widgets are never
- * part of a composition; model-owned DOM is edited only via the browser. */
+ * part of a composition; model-owned DOM is edited only via the browser.
+ *
+ * Single-file content script is intentional: the manifest injects scripts in
+ * order at document_start, and one atomic IIFE avoids cross-file load races.
+ * Internally this file is sectioned (state, adapters, caret repair, word
+ * plans, event wiring); see the ── section banners below. */
 (() => {
   'use strict';
 
   const engine = globalThis.ShobdoEngine;
   const settingsApi = globalThis.ShobdoSettings;
   if (!engine || typeof engine.transliterate !== 'function' || !settingsApi) return;
+
+  // ── Tunables ──────────────────────────────────────────────────────────
+  // MAX_RICH_TEXT_LENGTH bounds the O(n) logical-index walk per keystroke.
+  // Larger documents stay native rather than risking input jank.
+  const MAX_RICH_TEXT_LENGTH = 50000;
+  // MAX_CARET_CHECKS bounds post-edit rerender verification (microtasks + one task).
+  const MAX_CARET_CHECKS = 2;
+  let execCommandWarned = false;
 
   let settings = { enabled: true, mode: 'english', suggestions: true };
   let settingsRevision = 0;
@@ -90,7 +103,26 @@
     });
   } catch (_) { /* Keep native editing if settings are unavailable. */ }
 
+  // ── Section 1: editable hosts + adapters ──────────────────────────────
+  // The logical index walks rich DOM once per call; callers that need both
+  // text and selection should use snapshot() to avoid two walks.
+
   function targetOf(event) { return event.composedPath?.()[0] || event.target; }
+
+  function execCommandSupported(doc) {
+    return typeof doc?.execCommand === 'function';
+  }
+
+  function warnExecCommandOnce() {
+    if (execCommandWarned) return;
+    execCommandWarned = true;
+    // document.execCommand is deprecated but still the only way to join the
+    // browser's native undo stack and notify ProseMirror/Lexical/Draft models.
+    // When it disappears, conversion must fall back to the input-event path
+    // (already implemented below) plus manual InputEvent dispatch.
+    try { console.warn('Shobdo: document.execCommand unavailable; using fallback editing.'); }
+    catch (_) { /* Console may be restricted; editing continues regardless. */ }
+  }
 
   function editable(target) {
     let element = target?.nodeType === 1 ? target : target?.parentElement;
@@ -119,6 +151,9 @@
         text: () => root.value,
         selection: () => typeof root.selectionStart === 'number'
           ? { start: root.selectionStart, end: root.selectionEnd } : null,
+        snapshot() {
+          return { text: root.value, selection: this.selection() };
+        },
         setCaret(position) { root.setSelectionRange(position, position); },
         replace(start, end, text) {
           root.setRangeText(text, start, end, 'end');
@@ -220,12 +255,17 @@
       get nativeOnly() { return isNativeOnly(); },
       text: () => index().text,
       selection() {
+        return this.snapshot().selection;
+      },
+      // Single DOM walk returning both text and selection. Prefer this over
+      // calling text() + selection() separately (which walks twice).
+      snapshot() {
         const range = selectedRange();
-        if (!range) return null;
         const map = index();
+        if (!range) return { text: map.text, selection: null };
         const start = map.offset(range.startContainer, range.startOffset);
         const end = map.offset(range.endContainer, range.endOffset);
-        return start !== null && end !== null ? { start, end } : null;
+        return { text: map.text, selection: start !== null && end !== null ? { start, end } : null };
       },
       caretNode() {
         const range = selectedRange();
@@ -235,8 +275,17 @@
       },
       resetCaret() {
         const range = selectedRange();
-        return range?.startContainer === range?.endContainer && range?.startOffset === 0
-          && range?.endOffset === 0 && range?.endContainer.nodeType === 1;
+        if (!range || range.startContainer !== range.endContainer
+          || range.startOffset !== 0 || range.endOffset !== 0) return false;
+        if (range.endContainer.nodeType === 1) return true;
+        // Some frameworks reset to the start of the first text leaf instead of
+        // the element boundary. Treat that as a reset only at logical offset 0.
+        // Deliberate moves to 0 on surviving anchors are still rejected by the
+        // caller (watchCaret requires a lost anchor for rich text).
+        if (range.endContainer.nodeType === 3) {
+          return index().offset(range.endContainer, 0) === 0;
+        }
+        return false;
       },
       setCaret(position) {
         const point = index().point(position);
@@ -259,12 +308,14 @@
       },
       canReplace(start, end) {
         const map = index();
+        if (map.text.length > MAX_RICH_TEXT_LENGTH) return false;
         return start >= 0 && end >= start && end <= map.text.length
           && !/[\n\ufffc]/.test(map.text.slice(start, end));
       },
       replace(start, end, text, preferNative = true) {
         const interaction = interactionRevision;
         const map = index();
+        if (map.text.length > MAX_RICH_TEXT_LENGTH) return null;
         const previous = selectedRange();
         if (!previous || /[\n\ufffc]/.test(map.text.slice(start, end))) return null;
         const expected = map.text.slice(0, start) + text + map.text.slice(end);
@@ -310,7 +361,8 @@
         }
         const emptyInline = from.node.nodeType === 1 && inlineTags.has(from.node.tagName)
           && !from.node.textContent && !isNativeOnly();
-        if (preferNative && !emptyInline && typeof doc.execCommand === 'function') {
+        if (preferNative && !emptyInline && !execCommandSupported(doc)) warnExecCommandOnce();
+        if (preferNative && !emptyInline && execCommandSupported(doc)) {
           selection.removeAllRanges();
           selection.addRange(range);
           let success = false;
@@ -386,7 +438,11 @@
   }
 
   function save(edit) {
-    snapshots.set(edit.root, { text: edit.text(), selection: edit.selection() });
+    // One DOM walk via snapshot(); text() + selection() would walk twice.
+    const snap = typeof edit.snapshot === 'function'
+      ? edit.snapshot()
+      : { text: edit.text(), selection: edit.selection() };
+    snapshots.set(edit.root, snap);
   }
 
   function focused(root) {
@@ -394,6 +450,12 @@
     while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
     return root.isConnected && editable(active) === root;
   }
+
+  // ── Section 2: caret repair ─────────────────────────────────────────────
+  // Rerender recovery is bounded (MAX_CARET_CHECKS microtasks + one task) and
+  // never fights deliberate navigation: callers require a lost DOM anchor or
+  // an explicit boundary reset before repairing, and stop on focus/mode/text
+  // changes via interactionRevision/focused() checks.
 
   function repairCaret(edit, expected, position) {
     if (!focused(edit.root) || edit.text() !== expected) return false;
@@ -430,10 +492,10 @@
       if (ticket.check() && remaining > 1) queueMicrotask(() => check(remaining - 1));
     }
     // Native input is observed in capture, before the site's input callbacks can
-    // queue their rerender. Arm after dispatch, then use the same two checks.
+    // queue their rerender. Arm after dispatch, then use bounded checks.
     queueMicrotask(() => {
-      if (afterInput) queueMicrotask(() => check(2));
-      else check(2);
+      if (afterInput) queueMicrotask(() => check(MAX_CARET_CHECKS));
+      else check(MAX_CARET_CHECKS);
     });
     // Chrome checkpoints microtasks between propagation callbacks. Keep the
     // verified ticket until one task after dispatch/model reconciliation, and
@@ -489,18 +551,25 @@
     setTimeout(() => ticket.check(true, true), 0);
   }
 
-  function currentWord(edit, selection) {
+  function currentWord(edit, selection, cachedText) {
     if (!word) return null;
     if (!edit.root.isConnected || word.root !== edit.root || !selection
       || selection.start !== selection.end
-      || selection.start !== word.start + word.rendered.length
-      || edit.text().slice(word.start, selection.start) !== word.rendered) {
+      || selection.start !== word.start + word.rendered.length) {
+      commit();
+      return null;
+    }
+    // Callers on the hot path pass their already-read text to avoid a second
+    // DOM walk; otherwise read once here.
+    const text = cachedText !== undefined ? cachedText : edit.text();
+    if (text.slice(word.start, selection.start) !== word.rendered) {
       commit();
       return null;
     }
     return word;
   }
 
+  // ── Section 3: Latin-word plans (pure, no DOM writes) ───────────────────
   // Only the inserted text / current Latin word is converted. Existing Latin or
   // Bangla around it is never scanned or rewritten. A backtick starts one raw
   // Latin word: it remains visible until a letter arrives, then is consumed.
@@ -582,6 +651,8 @@
     return true;
   }
 
+  // ── Section 4: event wiring (delegated, document-level) ───────────────────
+
   document.addEventListener('beforeinput', event => {
     if (emitting || event.defaultPrevented) return;
     flushCaret(true);
@@ -590,9 +661,11 @@
     const root = editable(targetOf(event));
     const edit = adapter(root);
     if (!edit) { commit(); return; }
-    const selection = edit.selection();
-    const active = currentWord(edit, selection);
-    const record = { text: edit.text(), selection, active: active && { ...active },
+    const snap = typeof edit.snapshot === 'function'
+      ? edit.snapshot() : { text: edit.text(), selection: edit.selection() };
+    const selection = snap.selection;
+    const active = currentWord(edit, selection, snap.text);
+    const record = { text: snap.text, selection, active: active && { ...active },
       data: event.data, inputType: event.inputType, revision: settingsRevision };
     snapshots.set(root, record);
     pending.set(root, record);
@@ -756,9 +829,15 @@
     // These editors handle the original keystroke themselves. Insert via the
     // browser before that event stream begins, retaining its native input/model
     // notification, and swallow the original key only when insertion succeeds.
+    // The original event is suppressed exclusively on a verified replace();
+    // a refused/failed insert leaves DOM, selection and the event untouched.
     if (!root?.closest(earlyNativeEditor) || root.childNodes.length === 0
+      || !root.isConnected || !focused(root)
       || !allowed(root, event) || event.defaultPrevented
-      || !event.cancelable || typeof root.ownerDocument.execCommand !== 'function') return;
+      || !event.cancelable || !execCommandSupported(root.ownerDocument)) {
+      if (root && !execCommandSupported(root.ownerDocument)) warnExecCommandOnce();
+      return;
+    }
     const edit = adapter(root);
     const selection = edit.selection();
     if (!selection) return;

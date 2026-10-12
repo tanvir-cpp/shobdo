@@ -39,7 +39,10 @@ for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
 }
 
 // Copy only the audited allowlist, not tests, dev dependencies or private files.
-// The build never removes files from a user-selected directory.
+// The destination is the project-owned dist/shobdo (git-ignored build output),
+// so it is cleaned first to avoid stale assets lingering after source deletions.
+// This never touches a user-selected load directory (extension/ or a Chrome profile).
+fs.rmSync(destination, { recursive: true, force: true });
 fs.mkdirSync(destination, { recursive: true });
 for (const asset of assets) {
   const output = path.join(destination, asset);
@@ -47,4 +50,18 @@ for (const asset of assets) {
   fs.copyFileSync(path.join(source, asset), output);
 }
 fs.copyFileSync(path.join(root, 'LICENSE'), path.join(destination, 'LICENSE'));
+// Fail loudly if cleaning/copying left anything unexpected (e.g. stale files).
+function listedFiles(directory, prefix = '') {
+  const entries = [];
+  for (const name of fs.readdirSync(directory, { withFileTypes: true })) {
+    const relative = prefix ? `${prefix}/${name.name}` : name.name;
+    if (name.isDirectory()) entries.push(...listedFiles(path.join(directory, name.name), relative));
+    else entries.push(relative.replace(/\\/g, '/'));
+  }
+  return entries.sort();
+}
+const expected = new Set([...assets, 'LICENSE']);
+const actual = listedFiles(destination);
+for (const file of actual) assert.ok(expected.has(file), `Stale build output: ${file}`);
+assert.deepEqual(new Set(actual), expected);
 console.log(`Built dist/shobdo: ${assets.size + 1} local files, Manifest V3, storage permission only.`);

@@ -5,6 +5,10 @@
     ? require("./engine.js") : global.ShobdoEngine;
   const MAX_INPUT = 48;
   const MAX_CORRECTION = 24;
+  // Upper bound for the candidate list; ranking is exact > completion >
+  // correction > literal transliteration. Vocabulary is a curated everyday
+  // subset (244 words + variants), not a general dictionary — see README.
+  const MAX_CANDIDATES = 5;
 
   // A small, deliberately curated everyday vocabulary, not a general dictionary.
   // First spelling is canonical; remaining spellings are common Banglish variants.
@@ -140,8 +144,8 @@
       /^[A-Za-z]+$/.test(latin) && !/^[A-Z]{2,}$/.test(latin);
   }
 
-  function getCandidates(latin, limit = 5) {
-    limit = Number.isFinite(limit) ? Math.max(0, Math.min(5, Math.floor(limit))) : 5;
+  function getCandidates(latin, limit = MAX_CANDIDATES) {
+    limit = Number.isFinite(limit) ? Math.max(0, Math.min(MAX_CANDIDATES, Math.floor(limit))) : MAX_CANDIDATES;
     if (!limit || !eligible(latin)) return [];
     const input = latin.toLowerCase();
     const maximum = input.length < 5 ? 1 : 2;
@@ -197,18 +201,20 @@
     let scrollTargets = [];
     let suppliedAnchor = null;
     let initialFieldBox = null;
+    let repositionQueued = false;
 
     function hide() {
       revision++;
       visible = false;
       candidates = [];
       activeRoot = null;
+      repositionQueued = false;
       host?.remove();
       observer?.disconnect();
       observer = null;
-      for (const target of scrollTargets) target.removeEventListener("scroll", reposition, true);
+      for (const target of scrollTargets) target.removeEventListener("scroll", scheduleReposition, true);
       scrollTargets = [];
-      view?.removeEventListener("resize", reposition);
+      view?.removeEventListener("resize", scheduleReposition);
       suppliedAnchor = null;
       initialFieldBox = null;
     }
@@ -240,8 +246,9 @@
       host.setAttribute("data-shobdo-suggestions", "");
       // The host itself still lives in the site's DOM; important inline geometry
       // and an internal reset isolate both it and the shadow content.
+      // isolation:isolate keeps the max z-index from blending with site layers.
       for (const [name, value] of Object.entries({ all: "initial", position: "fixed",
-        "z-index": "2147483647", display: "block", margin: "0", padding: "0",
+        "z-index": "2147483647", isolation: "isolate", display: "block", margin: "0", padding: "0",
         border: "0", "box-sizing": "border-box", "pointer-events": "auto",
         direction: "ltr", visibility: "visible", opacity: "1", transform: "none" })) {
         host.style.setProperty(name, value, "important");
@@ -289,6 +296,19 @@
         }
       }
       return root.getBoundingClientRect();
+    }
+
+    // Scroll/resize can fire many times per frame. Run the first event
+    // synchronously (tests + click safety rely on it) and coalesce bursts.
+    function scheduleReposition() {
+      if (repositionQueued) return;
+      repositionQueued = true;
+      reposition();
+      const release = () => { repositionQueued = false; };
+      try {
+        if (typeof view?.requestAnimationFrame === "function") view.requestAnimationFrame(release);
+        else view?.setTimeout?.(release, 0);
+      } catch (_) { repositionQueued = false; }
     }
 
     function reposition() {
@@ -357,15 +377,19 @@
         scrollTargets.push(tree);
         tree = tree.host.getRootNode();
       }
-      for (const target of scrollTargets) target.addEventListener("scroll", reposition, true);
-      view.addEventListener("resize", reposition);
+      for (const target of scrollTargets) target.addEventListener("scroll", scheduleReposition, true);
+      view.addEventListener("resize", scheduleReposition);
       if (view.MutationObserver) {
         observer = new view.MutationObserver(() => {
           if (!activeRoot?.isConnected) hide();
         });
-        observer.observe(doc.documentElement, { childList: true, subtree: true });
+        // Observe body (not documentElement) plus open-shadow trees: cheaper
+        // yet still catches field removal; attribute/characterData changes
+        // never affect panel lifetime.
+        const scope = doc.body || doc.documentElement;
+        observer.observe(scope, { childList: true, subtree: true, attributes: false, characterData: false });
         for (const tree of scrollTargets.slice(1)) {
-          observer.observe(tree, { childList: true, subtree: true });
+          observer.observe(tree, { childList: true, subtree: true, attributes: false, characterData: false });
         }
       }
     }

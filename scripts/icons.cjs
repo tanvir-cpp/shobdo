@@ -1,6 +1,8 @@
 'use strict';
 
 // Rebuild the checked-in assets using the project's existing Playwright Chromium.
+// The committed PNGs in extension/icons/ are canonical; run this only when the
+// source SVG changes, then commit the regenerated PNGs together with the SVG.
 // The editable SVG contains only vector paths: no fonts, downloads, or runtime
 // image-generation dependencies are needed by the extension.
 const fs = require('node:fs/promises');

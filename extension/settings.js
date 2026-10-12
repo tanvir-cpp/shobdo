@@ -3,6 +3,11 @@
 
   const KEY = 'shobdoSettings';
   const DEFAULTS = Object.freeze({ enabled: true, mode: 'english', suggestions: true });
+  // Object.hasOwn is native since Chrome 93 (manifest requires 109+); keep a
+  // fallback so unit tests and older contexts behave identically.
+  const hasOwn = typeof Object.hasOwn === 'function'
+    ? (object, key) => Object.hasOwn(object, key)
+    : (object, key) => Object.prototype.hasOwnProperty.call(object, key);
   let writes = Promise.resolve();
 
   function normalize(value) {
@@ -28,13 +33,13 @@
         throw new TypeError('Unknown setting: ' + key);
       }
     }
-    if (Object.hasOwn(patch, 'enabled') && typeof patch.enabled !== 'boolean') {
+    if (hasOwn(patch, 'enabled') && typeof patch.enabled !== 'boolean') {
       throw new TypeError('Enabled must be true or false.');
     }
-    if (Object.hasOwn(patch, 'mode') && patch.mode !== 'bangla' && patch.mode !== 'english') {
+    if (hasOwn(patch, 'mode') && patch.mode !== 'bangla' && patch.mode !== 'english') {
       throw new TypeError('Mode must be bangla or english.');
     }
-    if (Object.hasOwn(patch, 'suggestions') && typeof patch.suggestions !== 'boolean') {
+    if (hasOwn(patch, 'suggestions') && typeof patch.suggestions !== 'boolean') {
       throw new TypeError('Suggestions must be true or false.');
     }
     // Copy now so a caller cannot mutate a queued update. Serialize writes made
@@ -54,7 +59,7 @@
       throw new TypeError('A settings subscriber must be a function.');
     }
     function listener(changes, areaName) {
-      if (areaName === 'local' && Object.hasOwn(changes, KEY)) {
+      if (areaName === 'local' && hasOwn(changes, KEY)) {
         callback(normalize(changes[KEY].newValue));
       }
     }
