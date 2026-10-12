@@ -98,9 +98,7 @@ test('everyday vocabulary includes over 100 curated correct word spellings', () 
   ];
   assert.ok(words.length > 100);
   for (const [latin, text] of words) {
-    assert.deepEqual(suggestions.getCandidates(latin, 1), [{ text, latin:
-      latin === 'ache' ? 'achhe' : latin,
-    kind: 'exact' }], latin);
+    assert.deepEqual(suggestions.getCandidates(latin, 1), [{ text, latin, kind: 'exact' }], latin);
   }
 });
 

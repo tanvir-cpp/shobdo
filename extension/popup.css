@@ -19,7 +19,6 @@ button, input { font: inherit; }
 }
 h1 { margin: 0; font-size: 22px; letter-spacing: -.7px; }
 .tagline { margin: 3px 0 0; color: #62706b; font-size: 12px; }
-.local-badge { margin-left: auto; padding: 5px 7px; border: 1px solid #d8e3da; border-radius: 20px; font-size: 11px; color: #32604e; }
 .settings-card { border: 1px solid #e0e5df; border-radius: 16px; background: #fff; overflow: hidden; }
 .enable-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 15px; cursor: pointer; }
 .suggestions-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 15px; border-top: 1px solid #e1e8e0; cursor: pointer; }
@@ -47,7 +46,6 @@ legend { padding: 0 0 9px; font-size: 12px; font-weight: 600; color: #5b6b64; }
 fieldset:disabled .mode-options { opacity: .5; }
 .status { margin: 0; padding: 8px 15px; background: #f2f6f1; border-top: 1px solid #e1e8e0; font-size: 12px; line-height: 1.5; min-height: 36px; }
 .example { margin: 12px 0; padding: 0 2px; }
-.eyebrow { margin: 0 0 6px; color: #69766e; font-size: 11px; letter-spacing: .2px; }
 .example-input { margin: 0 0 4px; color: #596760; font-size: 13px; }
 .example-input span { color: #136e58; margin-left: 8px; }
 .example-output { font-size: 22px; line-height: 1.4; color: #105c49; margin: 0; }

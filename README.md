@@ -25,7 +25,7 @@ Shobdo's card, refresh your tabs.
   never touched.
 - After 2 letters, a suggestion panel offers fixes (`banlga` → বাংলা):
   **↑/↓** pick, **Tab** accept, **Esc** dismiss. It suggests — never autocorrects,
-  learns, or phones home.
+  learns, or phones home (can be toggled off in the popup).
 
 | `tumi kemon acho` | তুমি কেমন আছো |
 | `tomar bhalo` | তোমার ভালো |
@@ -44,7 +44,7 @@ undoable. Only permission is `storage` (3 settings).
 ## Hack on it
 
 ```sh
-npm ci && npm test       # 109 checks
+npm ci && npm test       # run test suite
 npm run build            # production copy in dist/shobdo
 npm run demo             # playground at http://localhost:4173
 ```

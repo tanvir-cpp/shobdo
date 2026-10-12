@@ -26,7 +26,7 @@
     ["ekhane ekhaney", "এখানে"], ["okhane okhaney", "ওখানে"],
     ["ki kee", "কি"], ["keno kano kenO", "কেন"], ["kothay kothai", "কোথায়"],
     ["kokhon kakhon", "কখন"], ["kibhabe kivabe", "কীভাবে"],
-    ["ha hya haa", "হ্যাঁ"], ["na naa", "না"], ["achhe ache aache", "আছে"],
+    ["ha hya haa", "হ্যাঁ"], ["na naa", "না"], ["ache achhe aache", "আছে"],
     ["achi aachi", "আছি"], ["achhen achen", "আছেন"], ["chilo chhilo", "ছিল"],
     ["chilam chhilam", "ছিলাম"], ["hobe hobey", "হবে"], ["hoy hoi", "হয়"],
     ["hoye hoiye", "হয়ে"], ["holo", "হলো"], ["nei", "নেই"], ["nai", "নাই"],
@@ -335,7 +335,7 @@
       host.style.setProperty("top", `${top}px`, "important");
     }
 
-    function show({ root, latin, rect } = {}) {
+    function show({ root, latin, rendered, rect } = {}) {
       hide();
       // document_start has no body yet. A later composition edit will try again;
       // never create an observer/timer just to wait for mounting.

@@ -35,7 +35,11 @@
     ["sona", "sOna"],
     ["sonar", "sOnar"]
   ]);
-  // Uppercase vowel/conjunct controls remain available alongside acronyms.
+  // Uppercase two-letter sequences reserved by Avro's phonetic rules for
+  // specific vowels (OI, OU) and conjuncts (NG, NN, DD, TT). These pass
+  // through transliterate() instead of being treated as acronyms. When
+  // upgrading vendor/avro.js, verify this set against the Avro phonetic
+  // spec and add any new uppercase controls here to keep them functional.
   const phoneticControls = new Set(["OI", "OU", "NG", "NN", "DD", "TT"]);
 
   function transliterateWord(word) {

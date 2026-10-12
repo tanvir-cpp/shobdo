@@ -26,7 +26,10 @@ const assets = new Set([
 ]);
 for (const [size, asset] of Object.entries(manifest.icons)) {
   const png = fs.readFileSync(path.join(source, asset));
-  assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+  assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `Not a PNG: ${asset}`);
+  // Verify the first chunk is IHDR (bytes 12–15 = 0x49484452) before reading
+  // width/height at fixed offsets. This catches truncated or reordered PNGs.
+  assert.equal(png.readUInt32BE(12), 0x49484452, `Missing IHDR chunk: ${asset}`);
   assert.equal(png.readUInt32BE(16), Number(size), `Wrong icon width: ${asset}`);
   assert.equal(png.readUInt32BE(20), Number(size), `Wrong icon height: ${asset}`);
 }
@@ -38,6 +41,10 @@ const html = fs.readFileSync(path.join(source, manifest.action.default_popup), '
 for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
   assert.ok(assets.has(match[1]), `Unbundled popup asset: ${match[1]}`);
 }
+// Cross-check that manually listed assets still appear in popup.html.
+// The loop above checks HTML→allowlist; this checks allowlist→HTML for CSS.
+const htmlRefs = new Set([...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m => m[1]));
+assert.ok(htmlRefs.has('popup.css'), 'popup.css is in the asset allowlist but not referenced from popup.html');
 
 // Copy only the audited allowlist, not tests, dev dependencies or private files.
 // The destination is the project-owned dist/shobdo (git-ignored build output),

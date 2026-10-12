@@ -97,7 +97,9 @@
   retry.addEventListener('click', refresh);
   const unsubscribe = ShobdoSettings.subscribe(function (settings) {
     render(settings);
-    if (!busy) setBusy(false);
+    // Clear busy state if a background storage change arrives while a save is
+    // in-flight, so controls are not left permanently disabled after the race.
+    if (busy) setBusy(false);
   });
   window.addEventListener('pagehide', unsubscribe, { once: true });
   refresh();

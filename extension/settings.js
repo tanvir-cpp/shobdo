@@ -3,11 +3,9 @@
 
   const KEY = 'shobdoSettings';
   const DEFAULTS = Object.freeze({ enabled: true, mode: 'english', suggestions: true });
-  // Object.hasOwn is native since Chrome 93 (manifest requires 109+); keep a
-  // fallback so unit tests and older contexts behave identically.
-  const hasOwn = typeof Object.hasOwn === 'function'
-    ? (object, key) => Object.hasOwn(object, key)
-    : (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+  // Object.hasOwn is available in Chrome 93+ (manifest requires 109+) and
+  // Node 16+ (package.json requires Node 22+), so no polyfill is needed.
+  const hasOwn = Object.hasOwn.bind(Object);
   let writes = Promise.resolve();
 
   function normalize(value) {

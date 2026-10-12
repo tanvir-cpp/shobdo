@@ -32,7 +32,13 @@
   const pending = new WeakMap();
   const inlineTags = new Set(['SPAN', 'B', 'I', 'STRONG', 'EM', 'U', 'S', 'A',
     'FONT', 'CODE', 'SMALL', 'SUB', 'SUP', 'MARK']);
-  const blockTags = new Set(['P', 'DIV']);
+  // Block elements wrap their content with logical newline boundaries so that
+  // canReplace() prevents replacement ranges from crossing structural edges.
+  // LI/UL/OL enable transliteration inside lists; H1–H6/BLOCKQUOTE/PRE cover
+  // headings and preformatted blocks in plain contenteditable editors.
+  // Unknown/widget tags not in either set emit \ufffc, protecting model-owned DOM.
+  const blockTags = new Set(['P', 'DIV', 'LI', 'UL', 'OL',
+    'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'PRE']);
   const managedEditor = '.ProseMirror,.ql-editor,[data-slate-editor],'
     + '[data-lexical-editor],[data-contents],.DraftEditor-root,.DraftEditor-editorContainer,.public-DraftEditor-content';
   const earlyNativeEditor = '[data-lexical-editor],.DraftEditor-root,.DraftEditor-editorContainer,.public-DraftEditor-content';
@@ -129,6 +135,11 @@
     if (!element) return null;
     if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
       if (element.disabled || element.readOnly || element.matches(':disabled')) return null;
+      // Only 'text' and 'search' support unconstrained Latin input that Shobdo
+      // can transliterate. 'tel' has no value restriction but its numeric keypad
+      // on mobile makes phonetic Banglish input unlikely; 'email', 'url', 'number',
+      // 'date', 'password' and other types either enforce a format incompatible
+      // with Bangla or carry security implications (password fields must never be touched).
       if (element.tagName === 'INPUT' && !['text', 'search'].includes(element.type)) return null;
       return element;
     }
@@ -255,7 +266,14 @@
       get nativeOnly() { return isNativeOnly(); },
       text: () => index().text,
       selection() {
-        return this.snapshot().selection;
+        // One DOM walk for selection only. Use snapshot() when both text and
+        // selection are needed to avoid two walks.
+        const range = selectedRange();
+        if (!range) return null;
+        const map = index();
+        const start = map.offset(range.startContainer, range.startOffset);
+        const end = map.offset(range.endContainer, range.endOffset);
+        return start !== null && end !== null ? { start, end } : null;
       },
       // Single DOM walk returning both text and selection. Prefer this over
       // calling text() + selection() separately (which walks twice).
@@ -513,6 +531,11 @@
   }
 
   function watchNative(edit, plan, result) {
+    // If a prior deferred-native ticket is still waiting, abandon it now.
+    // Two rapid keystrokes can each produce a deferred result; without this,
+    // the second call overwrites caretRepair and the first ticket's commit()
+    // is never reached, leaving a stale word buffer.
+    if (caretRepair?.waiting) commit();
     const ticket = { waiting: true };
     const revision = interactionRevision;
     const normalized = result.expected.replace(/\n/g, '');
@@ -878,7 +901,10 @@
       composing.delete(root);
       compositionCommits.set(root, event.data);
       pending.delete(root);
-      save(adapter(root));
+      // Guard adapter() explicitly: focusin does the same, and adapter()
+      // is a separate step from editable() that could return null.
+      const edit = adapter(root);
+      if (edit) save(edit);
     }
     commit();
   }, true);

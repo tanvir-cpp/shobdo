@@ -33,6 +33,14 @@ chrome.commands.onCommand.addListener(function (command) {
   });
 });
 
+// initializeSettings is registered and called from three places intentionally:
+//  1. chrome.runtime.onInstalled — fresh installs and extension updates.
+//  2. chrome.runtime.onStartup  — browser restarts with the extension installed.
+//  3. Bare call below            — mid-session service-worker restarts, where
+//     Chrome fires neither onInstalled nor onStartup (most common in practice).
+// The operation queue serializes all three; the guard inside initializeSettings
+// (checking for valid stored settings) prevents redundant writes when multiple
+// events fire together on a fresh install.
 chrome.runtime.onInstalled.addListener(initializeSettings);
 chrome.runtime.onStartup.addListener(initializeSettings);
 initializeSettings();
