@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Shobdo — Banglish to Bangla",
   "short_name": "Shobdo",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Type Banglish and get Bangla locally. Switch seamlessly between Bangla and English.",
   "minimum_chrome_version": "109",
   "permissions": ["storage"],

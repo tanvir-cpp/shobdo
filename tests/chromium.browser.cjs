@@ -195,7 +195,7 @@ test('production extension in real Chromium', { timeout: 120000 }, async t => {
   });
   await t.test('real extension icons load and suggestions start with their default preference', async () => {
     const manifest = await worker.evaluate(() => chrome.runtime.getManifest());
-    assert.equal(manifest.version, '1.1.1');
+    assert.equal(manifest.version, '1.1.2');
     assert.deepEqual(Object.keys(manifest.icons), ['16', '32', '48', '128']);
     assert.equal(await popup.locator('.brand-mark').evaluate(image => image.complete && image.naturalWidth === 48), true);
     assert.equal(await popup.locator('#suggestions').isChecked(), true);

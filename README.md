@@ -8,7 +8,7 @@ for Chromium browsers: no accounts, no servers, your words never leave the tab.
 ## Install (1 minute)
 
 1. `chrome://extensions` → **Developer mode** → **Load unpacked** → pick the
-   **`extension`** folder (or extract `shobdo-1.1.1.zip` from Releases and pick that).
+   **`extension`** folder (or extract `shobdo-1.1.2.zip` from Releases and pick that).
 2. Pin Shobdo, refresh your open tabs, open the popup → **বাংলা**.
 3. Type anywhere you can type.
 
