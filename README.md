@@ -10,8 +10,8 @@ Plain JavaScript; no framework, runtime packages, accounts, or remote scripts.
 
 1. Open `chrome://extensions` (Edge: `edge://extensions`).
 2. Enable **Developer mode**.
-3. Click **Load unpacked** and select the **`extension`** folder in this project
-   (`E:\experiment\extension` in this workspace), not the project root.
+3. Click **Load unpacked** and select the **`extension`** folder in this project,
+   not the project root.
 4. Pin **Shobdo** from Chrome's extensions menu.
 5. **Refresh website tabs that were already open** when you installed it.
 6. Open Shobdo's popup, keep **Enable Shobdo** on, and choose **বাংলা**.
@@ -20,6 +20,16 @@ Plain JavaScript; no framework, runtime packages, accounts, or remote scripts.
 Alternatively, run `npm run build` and load **`dist/shobdo`**. Both folders are
 complete unpacked extensions; install only one copy. Chrome Web Store publishing
 or a signed CRX is not needed for this local installation.
+
+### Install from a release zip (no git needed)
+
+1. Download `shobdo-1.1.1.zip` from the GitHub Releases page and **extract it**.
+   Chrome cannot load a zip directly; the extracted folder must contain
+   `manifest.json` at its top level.
+2. Follow steps 1–7 above with the extracted folder. To update later,
+   download the newer zip, replace the folder, click **Reload** on Shobdo's
+   card, and refresh your website tabs. Release zips do not auto-update the
+   way a Chrome Web Store install would.
 
 ### Updating an existing installation to 1.1.1
 
