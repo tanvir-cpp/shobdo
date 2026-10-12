@@ -7,7 +7,7 @@
   const MAX_CORRECTION = 24;
   // Upper bound for the candidate list; ranking is exact > completion >
   // correction > literal transliteration. Vocabulary is a curated everyday
-  // subset (244 words + variants), not a general dictionary — see README.
+  // subset (246 words + variants), not a general dictionary — see README.
   const MAX_CANDIDATES = 5;
 
   // A small, deliberately curated everyday vocabulary, not a general dictionary.
@@ -106,7 +106,8 @@
     ["shada sada", "সাদা"], ["kalo kaalO", "কালো"],
     ["ek aek", "এক"], ["dui dooi", "দুই"], ["tin teen", "তিন"],
     ["char chaar", "চার"], ["pach panch", "পাঁচ"], ["chhoy choy", "ছয়"],
-    ["sat saat", "সাত"], ["at aat", "আট"], ["noy noi", "নয়"], ["dosh dos", "দশ"]
+    ["sat saat", "সাত"], ["at aat", "আট"], ["noy noi", "নয়"], ["dosh dos", "দশ"],
+    ["sona", "সোনা"], ["sonar", "সোনার"]
   ].map(([variants, text], order) => ({
     latin: variants.split(" ")[0], text: text.normalize("NFC"), order,
     variants: [...new Set(variants.toLowerCase().split(" "))]

@@ -18,7 +18,9 @@ test("requested common words and phrases", () => {
     ["bhalo", "ভালো"],
     ["valo", "ভালো"],
     ["bangla", "বাংলা"],
-    ["ami banglay likhi", "আমি বাংলায় লিখি"]
+    ["ami banglay likhi", "আমি বাংলায় লিখি"],
+    ["sona", "সোনা"],
+    ["amar sonar bangla", "আমার সোনার বাংলা"]
   ];
   for (const [input, expected] of examples) {
     assert.equal(transliterate(input), expected, input);
@@ -42,6 +44,7 @@ test("conjuncts and phonetic alternatives come from contextual Avro rules", () =
 
 test("whole-word aliases leave explicit Avro alternatives and other words usable", () => {
   assert.equal(transliterate("acho achO tomar tOmar bhalo bhalO valo valO"), "আছো আছো তোমার তোমার ভালো ভালো ভালো ভালো");
+  assert.equal(transliterate("sona sOna sonar sOnar"), "সোনা সোনা সোনার সোনার");
   assert.equal(transliterate("achola"), "আছলা");
   assert.equal(transliterate("bhalobasha"), "ভালবাশা");
   assert.equal(transliterate("valobasha"), "ভালবাশা");
@@ -87,6 +90,22 @@ test("public API rejects non-string input", () => {
   }
 });
 
+test("vendored autocorrect dictionary fixes common colloquial spellings", () => {
+  for (const [input, expected] of [
+    ["abong", "এবং"],
+    ["school", "স্কুল"],
+    ["dhaka", "ঢাকা"],
+    ["sotti", "সত্যি"],
+    ["sondha", "সন্ধ্যা"],
+    ["thanda", "ঠান্ডা"],
+    ["sonar", "সোনার"],
+  ]) {
+    assert.equal(transliterate(input), expected, input);
+  }
+  // Local aliases take precedence and agree with the dictionary.
+  assert.equal(transliterate("sona sOna sonar sOnar"), "সোনা সোনা সোনার সোনার");
+});
+
 test("classic extension scripts expose ShobdoEngine without CommonJS or networking", () => {
   const context = vm.createContext({});
   for (const file of ["vendor/avro.js", "engine.js"]) {
@@ -95,6 +114,18 @@ test("classic extension scripts expose ShobdoEngine without CommonJS or networki
   }
   assert.equal(context.ShobdoEngine.transliterate("ami banglay likhi"), "আমি বাংলায় লিখি");
   assert.equal(context.ShobdoEngine.transliterate("API, kemon acho?"), "API, কেমন আছো?");
+  // Local aliases work even when the optional dictionary is not loaded.
+  assert.equal(context.ShobdoEngine.transliterate("amar sonar bangla"), "আমার সোনার বাংলা");
+  assert.equal(typeof context.fetch, "undefined");
+});
+
+test("browser globals apply the autocorrect dictionary when loaded first", () => {
+  const context = vm.createContext({});
+  for (const file of ["vendor/avro.js", "vendor/autodict.js", "engine.js"]) {
+    const source = fs.readFileSync(path.join(__dirname, "../extension", file), "utf8");
+    vm.runInContext(source, context, { filename: file });
+  }
+  assert.equal(context.ShobdoEngine.transliterate("abong school dhaka"), "এবং স্কুল ঢাকা");
   assert.equal(typeof context.fetch, "undefined");
 });
 

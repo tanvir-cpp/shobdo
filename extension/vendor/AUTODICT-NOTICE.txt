@@ -1,0 +1,28 @@
+Avro Phonetic Autocorrect dictionary
+=====================================
+
+Source: Avro Keyboard by OmicronLab (https://github.com/omicronlab/Avro-Keyboard),
+file "Keyboard and Spell checker/autodict.dct" in that repository.
+Copyright (C) OmicronLab. All Rights Reserved.
+
+License: Mozilla Public License Version 1.1 (MPL-1.1).
+The complete license is included as MPL-1.1.txt.
+The covered data is distributed locally in autodict.dct (pristine upstream
+copy) and autodict.js (generated bridge). This matches how the extension
+already vendors the Avro phonetic engine; see AVRO-NOTICE.txt.
+
+Local processing, 2026-10-12:
+- Copied autodict.dct unchanged into this directory.
+- Generated autodict.js with scripts/autodict.cjs (run via `npm run autodict`):
+  kept only Latin-to-Latin pairs that differ, dropping backtick pairs
+  (upstream uses ` to break conjuncts; Shobdo reserves ` as the
+  keep-English escape), all-caps keys (returned unchanged as acronyms),
+  and no-ops that parse identically. Result: 3720 entries in a sorted Map.
+  No phonetic rules or correction targets were changed.
+- engine.js consults this map for whole Latin words; six explicit local
+  aliases (acho, tomar, bhalo, valo, sona, sonar) take precedence and agree
+  with the dictionary where they overlap.
+
+MPL obligations: retain this notice and the copyright header when
+redistributing; modifications to the covered files stay under MPL-1.1.
+Shobdo's own wrapper code remains under its own license.

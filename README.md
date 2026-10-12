@@ -90,7 +90,7 @@ unrelated inline formatting are preserved. Pasting is deliberately unchanged.
 ### Spelling suggestions and faster completion
 
 In Bangla mode, suggestions appear near the active field/caret after **two Latin
-letters**. The local vocabulary contains **244 curated everyday words** and
+letters**. The local vocabulary contains **246 curated everyday words** and
 alternative Banglish spellings. Exact common spellings rank first, followed by
 short completions and likely typing errors (including swapped letters).
 
@@ -123,6 +123,7 @@ or learn/store your words. Add vocabulary/variants in `extension/suggestions.js`
 | `hi` | হি |
 | `hai` | হাই |
 | `bangla` | বাংলা |
+| `amar sonar bangla` | আমার সোনার বাংলা |
 | `ami banglay likhi` | আমি বাংলায় লিখি |
 | `tumi kemon acho` | তুমি কেমন আছো |
 
@@ -130,12 +131,21 @@ The engine is **Avro phonetic**, not a character substitution or translation
 service. Its contextual rules handle vowel letters/signs, aspirated consonants,
 and conjuncts (`kh`, `sh`, `kkh`, etc.). Case-sensitive controls remain useful:
 `O` supplies explicit ও/ো, `OI` supplies ঐ/ৈ, and `OU` supplies ঔ/ৌ.
-Small whole-word aliases for `acho`, `tomar`, `bhalo`, and `valo` supply the requested
-common spellings; their explicit Avro alternatives remain supported.
+Small whole-word aliases for `acho`, `tomar`, `bhalo`, `valo`, `sona`, and
+`sonar` supply the requested common spellings; their explicit Avro alternatives
+remain supported. On top of that, the engine applies Avro Keyboard's own
+autocorrect dictionary (**3,720** vendored entries in
+`extension/vendor/autodict.js`, generated from the pristine
+`extension/vendor/autodict.dct` by `npm run autodict`; provenance and the
+applied filtering in `extension/vendor/AUTODICT-NOTICE.txt`), so everyday
+spellings like `abong`, `school`, `dhaka`, `sotti`, and `thanda` convert
+directly to এবং, স্কুল, ঢাকা, সত্যি, and ঠান্ডা. Entries that rely on
+upstream's backtick-conjunct convention are excluded because Shobdo reserves
+the backtick as its keep-English escape.
 
 Banglish is ambiguous. There is no universal spelling or guarantee that every
 informal spelling gives your intended word. The suggestion panel offers a small
-curated vocabulary rather than silently autocorrecting your writing. See
+curated vocabulary alongside (not instead of) these corrections. See
 `extension/engine.js` to extend phonetic aliases independently of the UI.
 
 ## Supported fields and honest limitations
@@ -195,8 +205,11 @@ Extension pages use a restrictive local-script CSP, with no `eval` or inline JS.
 extension/                 Load this folder directly in Chrome
   manifest.json            MV3 declaration, site matches, shortcut
   vendor/avro.js            Vendored contextual phonetic engine
+  vendor/autodict.dct       Pristine upstream autocorrect dictionary
+  vendor/autodict.js        Generated autocorrect bridge (via npm run autodict)
   vendor/MPL-1.1.txt        Upstream license
   vendor/AVRO-NOTICE.txt    Provenance, integrity and modifications
+  vendor/AUTODICT-NOTICE.txt Autocorrect provenance and filtering
   engine.js                Independent phonetic wrapper and common aliases
   suggestions.js           Offline vocabulary, ranking and isolated candidate UI
   content.js               Localized editing and Latin-word composition
@@ -206,6 +219,7 @@ extension/                 Load this folder directly in Chrome
   icons/                   PNG 16/32/48/128 and editable source SVG
 demo/index.html            Native-field playground (uses the installed extension)
 scripts/build.cjs          Validated allowlisted production copy
+scripts/autodict.cjs       Autocorrect dictionary generator (development only)
 scripts/demo.cjs           Local playground server
 scripts/icons.cjs          Reproducible PNG generator (development only)
 scripts/build-fixtures.cjs Local test-only managed-editor bundle
@@ -226,8 +240,9 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-- `npm test`: **107 tests** using Node's test runner, jsdom, and isolated browser
-  API mocks. Checks contextual transliteration, real script integration, cursor
+- `npm test`: **109 tests** using Node's test runner, jsdom, and isolated browser
+  API mocks. Checks contextual transliteration, the vendored autocorrect dictionary,
+  dictionary-absent fallback, real script integration, cursor
   and selection behavior, raw English escape, backspace, composition, paste,
   unsupported fields/editors, enable/mode behavior, storage persistence, command
   handler ordering, popup errors/recovery, block/BR/shadow editing, native model

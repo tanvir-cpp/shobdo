@@ -93,8 +93,8 @@ test('everyday vocabulary includes over 100 curated correct word spellings', () 
     ['biral', 'বিড়াল'], ['kukur', 'কুকুর'], ['gorom', 'গরম'], ['thanda', 'ঠান্ডা'],
     ['lal', 'লাল'], ['nil', 'নীল'], ['sobuj', 'সবুজ'], ['shada', 'সাদা'],
     ['kalo', 'কালো'], ['ek', 'এক'], ['dui', 'দুই'], ['tin', 'তিন'], ['char', 'চার'],
-    ['pach', 'পাঁচ'], ['chhoy', 'ছয়'], ['sat', 'সাত'], ['at', 'আট'], ['noy', 'নয়'],
-    ['dosh', 'দশ'],
+    ['pach', 'পাঁচ'], ['chhoy', 'ছয়'], ['sat', 'সাত'], ['at', 'আট'],     ['noy', 'নয়'],
+    ['dosh', 'দশ'], ['sona', 'সোনা'], ['sonar', 'সোনার'],
   ];
   assert.ok(words.length > 100);
   for (const [latin, text] of words) {

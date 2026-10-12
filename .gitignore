@@ -4,3 +4,26 @@ dist/
 test-results/
 playwright-report/
 *.zip
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local editor settings (the repo ships no editor config)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Coverage and temp output
+coverage/
+.nyc_output/
+*.tmp

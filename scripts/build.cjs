@@ -12,7 +12,7 @@ const manifest = JSON.parse(fs.readFileSync(path.join(source, 'manifest.json'), 
 assert.equal(manifest.manifest_version, 3);
 assert.deepEqual(manifest.permissions, ['storage']);
 assert.deepEqual(manifest.content_scripts[0].js,
-   ['vendor/avro.js', 'engine.js', 'suggestions.js', 'settings.js', 'content.js']);
+   ['vendor/avro.js', 'vendor/autodict.js', 'engine.js', 'suggestions.js', 'settings.js', 'content.js']);
 assert.ok(manifest.commands['toggle-mode']);
 assert.equal(manifest.version, require('../package.json').version);
 
@@ -22,6 +22,7 @@ const assets = new Set([
   ...Object.values(manifest.icons), ...Object.values(manifest.action.default_icon),
   'icons/shobdo.svg',
   'popup.js', 'popup.css', 'vendor/MPL-1.1.txt', 'vendor/AVRO-NOTICE.txt',
+  'vendor/autodict.dct', 'vendor/AUTODICT-NOTICE.txt',
 ]);
 for (const [size, asset] of Object.entries(manifest.icons)) {
   const png = fs.readFileSync(path.join(source, asset));

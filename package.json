@@ -8,6 +8,7 @@
     "test": "node --test tests/*.test.cjs",
     "test:browser": "node scripts/build-fixtures.cjs && node --test tests/chromium.browser.cjs",
     "build": "node scripts/build.cjs",
+    "autodict": "node scripts/autodict.cjs",
     "icons": "node scripts/icons.cjs",
     "demo": "node scripts/demo.cjs",
     "check": "npm test && npm run build"

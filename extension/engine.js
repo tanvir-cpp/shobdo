@@ -9,14 +9,31 @@
     throw new Error("Load vendor/avro.js before engine.js.");
   }
 
+  // Vendored upstream autocorrect dictionary (vendor/autodict.js), when it was
+  // loaded before this file. Absence is fine: the engine still works with the
+  // local aliases below (e.g. isolated vm tests load only avro.js + engine.js).
+  let autocorrect = null;
+  if (typeof module === "object" && module.exports) {
+    try {
+      const loaded = require("./vendor/autodict.js");
+      if (loaded instanceof Map) autocorrect = loaded;
+    } catch (_) { /* Optional dictionary; local aliases suffice. */ }
+  } else if (root.OmicronLab?.Avro?.Autocorrect instanceof Map) {
+    autocorrect = root.OmicronLab.Avro.Autocorrect;
+  }
+
   // Avro's lower-case 'o' is an inherent vowel, not an explicit ও/ো.
   // These whole-word aliases cover common colloquial input, while all other
   // words retain the upstream contextual rules and case-sensitive controls.
+  // They take precedence over the autocorrect dictionary where they overlap
+  // (verified to agree: sona/sOnar).
   const aliases = new Map([
     ["acho", "achO"],
     ["tomar", "tOmar"],
     ["bhalo", "bhalO"],
-    ["valo", "valO"]
+    ["valo", "valO"],
+    ["sona", "sOna"],
+    ["sonar", "sOnar"]
   ]);
   // Uppercase vowel/conjunct controls remain available alongside acronyms.
   const phoneticControls = new Set(["OI", "OU", "NG", "NN", "DD", "TT"]);
@@ -25,7 +42,7 @@
     if (/^[A-Z]{2,}$/.test(word) && !phoneticControls.has(word)) {
       return word;
     }
-    const input = aliases.get(word) || word;
+    const input = aliases.get(word) || autocorrect?.get(word) || word;
     // Normalize generated Bangla only; existing text must remain untouched.
     return phonetic.parse(input).normalize("NFC");
   }

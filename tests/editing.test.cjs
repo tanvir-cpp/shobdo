@@ -81,7 +81,7 @@ async function setup(markup = '<textarea></textarea>', initial = {},
         removeListener: listener => listeners.delete(listener),
       },
     } };
-    for (const filename of ['vendor/avro.js', 'engine.js', 'suggestions.js', 'settings.js']) {
+    for (const filename of ['vendor/avro.js', 'vendor/autodict.js', 'engine.js', 'suggestions.js', 'settings.js']) {
       vm.runInContext(fs.readFileSync(path.join(__dirname, '../extension', filename), 'utf8'),
         dom.getInternalVMContext(), { filename });
     }
