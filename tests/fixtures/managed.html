@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Local managed-editor regression fixture</title>
+<style>body {font:16px system-ui;margin:30px} input,textarea,.ProseMirror {display:block;min-height:80px;width:600px;border:1px solid #777;padding:12px;margin:12px 0;white-space:pre-wrap}.ProseMirror p {margin:0}</style>
+<script type="importmap">{"imports":{
+  "prosemirror-model":"/test-assets/model.js",
+  "prosemirror-state":"/test-assets/state.js",
+  "prosemirror-view":"/test-assets/view.js",
+  "prosemirror-transform":"/test-assets/transform.js",
+  "orderedmap":"/test-assets/orderedmap.js"
+}}</script>
+<script src="/test-assets/react.js"></script><script src="/test-assets/react-dom.js"></script>
+</head><body>
+<h1>Actual editor libraries (test-only)</h1>
+<div id="react-root"></div>
+<h2>ProseMirror</h2><div id="pm-root"></div>
+<h2>Lexical composer</h2><div id="lexical-root" contenteditable="true" role="textbox" style="min-height:60px;border:1px solid;white-space:pre-wrap"></div>
+<div id="social-react-root"></div>
+<script src="/test-assets/social.js"></script>
+<script>
+  function ControlledFields() {
+    const [text,setText] = React.useState('');
+    const [area,setArea] = React.useState('');
+    const [revision,setRevision] = React.useState(0);
+    window.reactText = text; window.reactArea = area;
+    return React.createElement('div',null,
+      React.createElement('input',{id:'react-input',value:text,onChange:event=>setText(event.target.value)}),
+      React.createElement('textarea',{id:'react-area',value:area,onChange:event=>setArea(event.target.value)}),
+      React.createElement('button',{id:'react-render',onClick:()=>setRevision(revision+1)},'Rerender '+revision));
+  }
+  ReactDOM.createRoot(document.getElementById('react-root')).render(React.createElement(ControlledFields));
+</script>
+<script type="module">
+  import {Schema} from 'prosemirror-model';
+  import {EditorState} from 'prosemirror-state';
+  import {EditorView} from 'prosemirror-view';
+  const schema = new Schema({nodes:{
+    doc:{content:'block+'},
+    paragraph:{content:'inline*',group:'block',parseDOM:[{tag:'p'}],toDOM:()=>['p',0]},
+    text:{group:'inline'}
+  }});
+  window.editorView = new EditorView(document.getElementById('pm-root'),{
+    state:EditorState.create({schema}),
+    dispatchTransaction(transaction) {
+      this.updateState(this.state.apply(transaction));
+    }
+  });
+  window.editorsReady = true;
+</script>
+</body></html>

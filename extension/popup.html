@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shobdo — Bangla typing</title>
+    <link rel="stylesheet" href="popup.css">
+    <script src="settings.js" defer></script>
+    <script src="popup.js" defer></script>
+  </head>
+  <body>
+    <main id="popup" aria-busy="true">
+      <header class="brand">
+        <img class="brand-mark" src="icons/icon-48.png" width="48" height="48" alt="Shobdo logo">
+        <div>
+          <h1>Shobdo</h1>
+          <p class="tagline">Your words. In Bangla.</p>
+        </div>
+        <span class="local-badge">On-device</span>
+      </header>
+
+      <section class="settings-card" aria-label="Typing settings">
+        <label class="enable-row" for="enabled">
+          <span><span class="control-title">Enable Shobdo</span><span class="control-description">Bangla typing, whenever you need it</span></span>
+          <span class="switch">
+            <input id="enabled" type="checkbox" role="switch" disabled>
+            <span class="switch-track" aria-hidden="true"></span>
+          </span>
+        </label>
+
+        <fieldset id="mode-controls" disabled>
+          <legend>Typing mode</legend>
+          <div class="mode-options">
+            <label class="mode-option" for="mode-english">
+              <input id="mode-english" type="radio" name="mode" value="english">
+              <span><strong>English</strong><small>Keep what you type</small></span>
+            </label>
+            <label class="mode-option" for="mode-bangla">
+              <input id="mode-bangla" type="radio" name="mode" value="bangla">
+              <span><strong lang="bn">বাংলা</strong><small>Type phonetically</small></span>
+            </label>
+          </div>
+        </fieldset>
+        <label class="suggestions-row" for="suggestions">
+          <span><span class="control-title">Suggestions</span><span id="suggestions-description" class="control-description">A local candidate list for Bangla.<br>Tab accepts · ↑/↓ chooses · Esc closes.</span></span>
+          <span class="switch">
+            <input id="suggestions" type="checkbox" role="switch" aria-describedby="suggestions-description" disabled>
+            <span class="switch-track" aria-hidden="true"></span>
+          </span>
+        </label>
+        <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true">Loading your settings…</p>
+      </section>
+
+      <section class="example" aria-label="Bangla typing example">
+        <p class="eyebrow">A little English. A little magic.</p>
+        <p class="example-input">ami banglay likhi <span aria-hidden="true">→</span></p>
+        <p class="example-output" lang="bn">আমি বাংলায় লিখি</p>
+        <p class="example-caption">Prefix a word with a backtick (<code>`React</code>) to keep it in English.</p>
+      </section>
+
+      <div id="error-box" class="error-box" hidden>
+        <p id="error-message" role="alert"></p>
+        <button id="retry" type="button">Reload settings</button>
+      </div>
+
+      <footer>
+        <p><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd><span>Switch typing mode</span></p>
+        <small>Switching modes keeps a paused Shobdo paused. Typing stays on your device.</small>
+      </footer>
+    </main>
+  </body>
+</html>

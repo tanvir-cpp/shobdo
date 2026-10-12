@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title description">
+  <title id="title">Shobdo</title>
+  <desc id="description">A white flowing S with a Bangla-inspired headline on a rounded green tile.</desc>
+  <defs>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#19866b"/>
+      <stop offset="1" stop-color="#105c49"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="124" height="124" rx="30" fill="url(#green)"/>
+  <path d="M89 42C83 29 47 28 39 43C27 66 91 57 89 80C87 101 49 104 37 88" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
+  <path d="M34 26H94" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+</svg>

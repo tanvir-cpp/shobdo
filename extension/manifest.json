@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Shobdo — Banglish to Bangla",
+  "short_name": "Shobdo",
+  "version": "1.1.1",
+  "description": "Type Banglish and get Bangla locally. Switch seamlessly between Bangla and English.",
+  "minimum_chrome_version": "109",
+  "permissions": ["storage"],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Shobdo — typing mode",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png"
+    }
+  },
+  "commands": {
+    "toggle-mode": {
+      "suggested_key": { "default": "Alt+Shift+S", "mac": "Alt+Shift+S" },
+      "description": "Switch between Bangla and English typing"
+    }
+  },
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*"],
+    "js": ["vendor/avro.js", "engine.js", "suggestions.js", "settings.js", "content.js"],
+    "run_at": "document_start",
+    "all_frames": true,
+    "match_about_blank": true
+  }],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  }
+}

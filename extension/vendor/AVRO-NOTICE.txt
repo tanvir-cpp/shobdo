@@ -1,0 +1,31 @@
+jsAvroPhonetic / avro-phonetic
+=============================
+
+Package: avro-phonetic@1.1.5
+Repository: https://github.com/dipu-bd/jsAvroPhonetic
+Registry: https://registry.npmjs.org/avro-phonetic/-/avro-phonetic-1.1.5.tgz
+Package SHA-1: 6e680a964c8159831872faa0e933d2cda56cd66e
+Package integrity (SHA-512):
+sha512-zVGo6mT4I1aagl3MNLuK/PRo1pbKDvQSpGFloyetY0HyCUC+NOUFf9hGKb+eL3oSC19uPVgcvuYQOJaE9YaVhw==
+
+Original Code: jsAvroPhonetic
+Initial Developer: Rifat Nabi <to.rifat@gmail.com>
+Copyright (C) OmicronLab (http://www.omicronlab.com). All Rights Reserved.
+The license's Exhibit A also identifies contributor Mehdi Hasan
+<mhasan@omicronlab.com>.
+
+License: Mozilla Public License Version 1.1 (MPL-1.1).
+The complete original license is included as MPL-1.1.txt.
+The covered source is distributed locally in avro.js under MPL-1.1.
+The upstream preferred source is src/avro-lib.js in the package above.
+
+Local changes, 2026-10-12:
+- Copied dist/avro-lib-v1.1.4.min.js from npm avro-phonetic@1.1.5 to avro.js.
+  The upstream package uses a v1.1.4 distribution filename/banner despite
+  its published npm version being 1.1.5; the banner is preserved.
+- Added the original full copyright/license notice and this provenance.
+- Appended a globalThis binding and CommonJS export for local use/testing.
+  No phonetic rules or parser behavior were changed.
+
+This modification is derived from the Original Code of Rifat Nabi.
+The extension wrapper in ../engine.js is maintained separately.

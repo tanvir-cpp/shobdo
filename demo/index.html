@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shobdo typing playground</title>
+  <style>
+    :root { font-family: system-ui, "Nirmala UI", sans-serif; color: #213a33; background: #f4f7f5; }
+    body { max-width: 740px; margin: 40px auto; padding: 0 24px; }
+    h1 { margin-bottom: 8px; } p { line-height: 1.6; }
+    label { display: block; font-weight: 600; margin: 24px 0 8px; }
+    input, textarea, [contenteditable] { box-sizing: border-box; width: 100%; padding: 14px; border: 1px solid #bfd1c7; border-radius: 10px; background: white; color: inherit; font: inherit; line-height: 1.7; }
+    textarea { min-height: 140px; resize: vertical; } [contenteditable] { min-height: 72px; white-space: pre-wrap; }
+    :focus { outline: 2px solid #238063; outline-offset: 2px; }
+    .note { font-size: 14px; color: #52675d; } code { background: #e5ece7; padding: 2px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Shobdo typing playground <span lang="bn">শব্দ</span></h1>
+  <p>This page contains native fields, not a simulated extension. Install Shobdo, choose <strong>বাংলা</strong> in its popup, then type <code>ami banglay likhi</code>.</p>
+  <p class="note">Try <code>tumi kemon acho</code>, <code>tomar</code>, <code>valo</code>, and <code>bangla</code>. <code>hi</code> gives হি; <code>hai</code> gives হাই. Use <code>`React</code> to keep one word in English, or Alt+Shift+S to change mode.</p>
+  <label for="plain">Text input</label>
+  <input id="plain" type="text" autocomplete="off" placeholder="Type here…">
+  <label for="area">Textarea (including multiple lines)</label>
+  <textarea id="area" placeholder="Type here…"></textarea>
+  <label for="search">Search input</label>
+  <input id="search" type="search" autocomplete="off">
+  <label id="rich-label">Basic inline rich text</label>
+  <div id="rich" contenteditable="true" role="textbox" aria-labelledby="rich-label"><b>Existing text: </b><span>type after this. </span></div>
+  <label id="blocks-label">Paragraph rich text — select or type within either line</label>
+  <div id="blocks" contenteditable="true" role="textbox" aria-labelledby="blocks-label"><p>First line: </p><p>Second line: </p></div>
+  <label id="breaks-label">Line-break rich text</label>
+  <div id="breaks" contenteditable="true" role="textbox" aria-labelledby="breaks-label">Before<br>After </div>
+  <label id="empty-label">Empty rich-text composer</label>
+  <div id="empty-rich" contenteditable="true" role="textbox" aria-labelledby="empty-label"><br></div>
+  <label id="widget-label">Rich text with a protected mention</label>
+  <div id="widget-rich" contenteditable="true" role="textbox" aria-labelledby="widget-label"><span contenteditable="false">@Mention</span><span> Type here: </span></div>
+  <label for="password">Password — deliberately never transliterated</label>
+  <input id="password" type="password" autocomplete="off">
+  <p class="note">Spelling suggestions appear after two letters: try <code>banlga</code>, then Tab to choose বাংলা. ↑/↓ changes the choice; Esc closes; Enter is unchanged. Disable suggestions in the popup if preferred.</p>
+  <p class="note">Paste stays unchanged. Paragraphs and line breaks are supported locally; selections crossing structural boundaries or protected widgets remain native. This page does not submit, save, or send your input.</p>
+</body>
+</html>

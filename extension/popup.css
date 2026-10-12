@@ -1,0 +1,70 @@
+:root {
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  color: #202a2a;
+  background: #f7f8f5;
+}
+
+* { box-sizing: border-box; }
+body { width: 352px; max-height: 600px; overflow-y: auto; margin: 0; }
+main { padding: 14px 20px 12px; }
+button, input { font: inherit; }
+.brand { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
+.brand-mark {
+  display: block;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+h1 { margin: 0; font-size: 22px; letter-spacing: -.7px; }
+.tagline { margin: 3px 0 0; color: #62706b; font-size: 12px; }
+.local-badge { margin-left: auto; padding: 5px 7px; border: 1px solid #d8e3da; border-radius: 20px; font-size: 11px; color: #32604e; }
+.settings-card { border: 1px solid #e0e5df; border-radius: 16px; background: #fff; overflow: hidden; }
+.enable-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 15px; cursor: pointer; }
+.suggestions-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 15px; border-top: 1px solid #e1e8e0; cursor: pointer; }
+.suggestions-row .control-description { font-size: 11px; line-height: 1.6; }
+.control-title { display: block; font-weight: 650; }
+.control-description { display: block; font-size: 12px; color: #65736e; margin-top: 5px; line-height: 1.4; }
+.switch { position: relative; flex-shrink: 0; width: 40px; height: 24px; }
+.switch input { position: absolute; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.switch-track { display: block; height: 100%; border-radius: 15px; background: #99a49e; pointer-events: none; }
+.switch-track::after { content: ""; display: block; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; }
+.switch input:checked + .switch-track { background: #136e58; }
+.switch input:checked + .switch-track::after { transform: translateX(16px); }
+.switch input:focus-visible + .switch-track { outline: 3px solid #266ec0; outline-offset: 3px; }
+.switch input:disabled + .switch-track { opacity: .5; }
+fieldset { margin: 0; padding: 0 15px 12px; border: 0; }
+legend { padding: 0 0 9px; font-size: 12px; font-weight: 600; color: #5b6b64; }
+.mode-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mode-option { position: relative; cursor: pointer; }
+.mode-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.mode-option span { display: flex; flex-direction: column; justify-content: center; min-height: 56px; padding: 8px; border: 1px solid #d9e1db; border-radius: 10px; text-align: center; pointer-events: none; }
+.mode-option strong { font-size: 14px; font-weight: 650; }
+.mode-option small { margin-top: 4px; color: #64736b; font-size: 11px; }
+.mode-option input:checked + span { border-color: #136e58; background: #eef7f1; color: #105c49; box-shadow: inset 0 0 0 1px #136e58; }
+.mode-option input:focus-visible + span { outline: 3px solid #266ec0; outline-offset: 2px; }
+fieldset:disabled .mode-options { opacity: .5; }
+.status { margin: 0; padding: 8px 15px; background: #f2f6f1; border-top: 1px solid #e1e8e0; font-size: 12px; line-height: 1.5; min-height: 36px; }
+.example { margin: 12px 0; padding: 0 2px; }
+.eyebrow { margin: 0 0 6px; color: #69766e; font-size: 11px; letter-spacing: .2px; }
+.example-input { margin: 0 0 4px; color: #596760; font-size: 13px; }
+.example-input span { color: #136e58; margin-left: 8px; }
+.example-output { font-size: 22px; line-height: 1.4; color: #105c49; margin: 0; }
+.example-caption { font-size: 12px; line-height: 1.5; color: #68756e; margin: 7px 0 0; }
+.error-box { border: 1px solid #ebc5bb; background: #fff3ee; padding: 12px; border-radius: 10px; margin-bottom: 16px; color: #853e2c; }
+.error-box[hidden] { display: none; }
+.error-box p { margin: 0 0 8px; font-size: 12px; line-height: 1.5; }
+.error-box button { border: 1px solid #ad6654; border-radius: 6px; background: #fff; padding: 5px 8px; color: #853e2c; font-size: 11px; cursor: pointer; }
+button:focus-visible { outline: 3px solid #266ec0; outline-offset: 2px; }
+footer { border-top: 1px solid #dfe6de; padding-top: 8px; }
+footer p { display: flex; align-items: center; gap: 4px; margin: 0 0 6px; color: #637067; font-size: 11px; }
+kbd { padding: 3px 5px; border: 1px solid #d0d8cf; border-bottom-width: 2px; border-radius: 4px; background: #fff; color: #33473d; font: inherit; }
+footer p span { margin-left: auto; }
+footer > small { display: block; color: #66756b; font-size: 11px; line-height: 1.5; }
+
+@media (forced-colors: active) {
+  .switch-track { border: 1px solid ButtonText; }
+  .switch-track::after { background: ButtonText; }
+  .mode-option input:checked + span { outline: 2px solid Highlight; }
+}

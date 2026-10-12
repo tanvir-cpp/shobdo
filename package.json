@@ -1,0 +1,36 @@
+{
+  "name": "shobdo",
+  "version": "1.1.1",
+  "private": true,
+  "description": "Offline Banglish-to-Bangla Chromium extension",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "node scripts/build-fixtures.cjs && node --test tests/chromium.browser.cjs",
+    "build": "node scripts/build.cjs",
+    "icons": "node scripts/icons.cjs",
+    "demo": "node scripts/demo.cjs",
+    "check": "npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@lexical/plain-text": "^0.52.0",
+    "draft-js": "^0.11.7",
+    "esbuild": "^0.25.12",
+    "jsdom": "^26.1.0",
+    "lexical": "^0.52.0",
+    "playwright": "^1.56.1",
+    "prosemirror-model": "^1.25.12",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-view": "^1.42.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "overrides": {
+    "draft-js": {
+      "immutable": "3.8.4"
+    }
+  }
+}
