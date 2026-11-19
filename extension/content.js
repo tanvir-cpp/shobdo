@@ -166,7 +166,37 @@
           return { text: root.value, selection: this.selection() };
         },
         setCaret(position) { root.setSelectionRange(position, position); },
-        replace(start, end, text) {
+        replace(start, end, text, preferNative = true) {
+          // setRangeText is a programmatic edit, so the browser would not apply
+          // maxlength to it. Refuse growth past the limit and let the native
+          // edit (which enforces maxlength itself) proceed instead.
+          const limit = root.maxLength;
+          if (limit >= 0 && text.length > end - start
+            && root.value.length - (end - start) + text.length > limit) return null;
+          const doc = root.ownerDocument;
+          // setRangeText wipes the field's undo history. execCommand performs
+          // the same edit as a real user edit, so Ctrl+Z keeps working and the
+          // page sees genuine input events. Any refusal falls through to
+          // setRangeText below, which behaves exactly as before.
+          if (preferNative && execCommandSupported(doc) && focused(root)) {
+            const old = root.value;
+            const expected = old.slice(0, start) + text + old.slice(end);
+            if (old.slice(start, end) === text) {
+              root.setSelectionRange(end, end);
+              return { changed: true, native: false, valid: true };
+            }
+            const before = [root.selectionStart, root.selectionEnd, root.selectionDirection];
+            // Replace the whole range. Narrowing it to the changed suffix would
+            // start the selection inside a Bangla conjunct cluster, which
+            // Chrome snaps to a grapheme boundary and then edits the wrong span.
+            root.setSelectionRange(start, end);
+            try { doc.execCommand(text ? 'insertText' : 'delete', false, text); }
+            catch (_) { /* Native refused; fall back below. */ }
+            if (root.value === expected) return { changed: true, native: true, valid: true };
+            // A page handler rewrote the value itself: report, never re-apply.
+            if (root.value !== old) return { changed: true, native: true, valid: false };
+            root.setSelectionRange(before[0], before[1], before[2]);
+          }
           root.setRangeText(text, start, end, 'end');
           return { changed: true, native: false, valid: true };
         },

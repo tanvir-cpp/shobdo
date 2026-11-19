@@ -196,6 +196,7 @@
     if (typeof onAccept !== "function") throw new TypeError("Expected a suggestion acceptance callback.");
     let host, list, doc, view, activeRoot, observer;
     let candidates = [];
+    let renderedText = null;
     let highlighted = 0;
     let visible = false;
     let revision = 0;
@@ -208,6 +209,7 @@
       revision++;
       visible = false;
       candidates = [];
+      renderedText = null;
       activeRoot = null;
       repositionQueued = false;
       host?.remove();
@@ -341,6 +343,12 @@
       // never create an observer/timer just to wait for mounting.
       if (!root?.isConnected || !root.ownerDocument.body || !eligible(latin) || latin.length < 2) return;
       candidates = getCandidates(latin);
+      if (typeof rendered === "string") {
+        renderedText = rendered;
+        // The literal fallback is, by construction, what is already in the
+        // field. Offering it would only trap Tab for a no-op "acceptance".
+        candidates = candidates.filter(c => !(c.kind === "literal" && c.text === rendered));
+      }
       if (!candidates.length) return;
       mount(root.ownerDocument);
       activeRoot = root;
@@ -403,7 +411,15 @@
       switch (event.key) {
         case "ArrowDown": highlight((highlighted + 1) % candidates.length); break;
         case "ArrowUp": highlight((highlighted + candidates.length - 1) % candidates.length); break;
-        case "Tab": choose(highlighted); break;
+        case "Tab":
+          // Accepting what is already typed changes nothing, so let Tab keep
+          // its normal job (moving focus) instead of swallowing the key.
+          if (renderedText !== null && candidates[highlighted]?.text === renderedText) {
+            hide();
+            return false;
+          }
+          choose(highlighted);
+          break;
         case "Escape": hide(); break;
         default: return false; // Especially Enter: retain native form submission.
       }

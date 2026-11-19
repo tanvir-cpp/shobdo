@@ -382,11 +382,38 @@ test('document_start without a body stays lazy, then mounts on a later edit', t 
 test('candidate text and rendered input are text, never executable HTML', t => {
   const payload = '<img src=x onerror="window.pwned=true"><script>window.pwned=true</script>';
   const page = setup(t, undefined, () => payload);
-  page.controller.show({ root: page.root, latin: 'qxzv', rendered: payload });
+  page.controller.show({ root: page.root, latin: 'qxzv', rendered: 'something else' });
   assert.equal(page.options().length, 1);
   assert.ok(page.options()[0].textContent.includes(payload));
   assert.equal(page.host().shadowRoot.querySelector('img,script'), null);
   assert.equal(page.window.pwned, undefined);
+});
+
+test('the literal fallback equal to the typed text is not offered; lone literals show nothing', t => {
+  const page = setup(t);
+  page.controller.show({ root: page.root, latin: 'xyz', rendered: page.window.ShobdoEngine.transliterate('xyz') });
+  assert.equal(page.host(), null, 'only the no-op literal remained');
+  page.controller.show({ root: page.root, latin: 'banlga', rendered: page.window.ShobdoEngine.transliterate('banlga') });
+  const texts = page.options().map(option => option.firstChild.textContent);
+  assert.equal(texts[0], 'বাংলা');
+  assert.ok(!texts.includes(page.window.ShobdoEngine.transliterate('banlga')));
+});
+
+test('Tab passes through when the highlighted candidate is what is already typed', t => {
+  const page = setup(t);
+  const typed = page.window.ShobdoEngine.transliterate('ami');
+  page.controller.show({ root: page.root, latin: 'ami', rendered: typed });
+  assert.equal(page.options()[0].firstChild.textContent, typed);
+  const tab = page.key('Tab');
+  assert.equal(tab.handled, false);
+  assert.equal(tab.event.defaultPrevented, false);
+  assert.equal(page.accepted.length, 0);
+  assert.equal(page.host(), null);
+  // Navigating to a different candidate makes Tab accept it again.
+  page.controller.show({ root: page.root, latin: 'ami', rendered: typed });
+  page.key('ArrowDown');
+  assert.equal(page.key('Tab').handled, true);
+  assert.equal(page.accepted.length, 1);
 });
 
 test('show on short input or raw escapes hides an existing panel', t => {

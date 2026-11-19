@@ -153,6 +153,16 @@ async function setup(markup = '<textarea></textarea>', initial = {},
       assert.ok(['insertText', 'delete'].includes(command));
       const inputType = command === 'delete' ? 'deleteContentBackward' : 'insertText';
       const data = command === 'delete' ? null : value;
+      if (field) {
+        // Native commands on text fields edit the value at the field's selection.
+        const before = new window.InputEvent('beforeinput', { bubbles: true, composed: true,
+          cancelable: true, inputType, data });
+        if (!root.dispatchEvent(before)) return false;
+        root.setRangeText(data || '', root.selectionStart, root.selectionEnd, 'end');
+        root.dispatchEvent(new window.InputEvent('input', { bubbles: true, composed: true,
+          inputType, data }));
+        return true;
+      }
       const selection = getSelection();
       const range = selection.getRangeAt(0).cloneRange();
       const placeholder = range.collapsed && range.startContainer.nodeType === 1
@@ -868,7 +878,8 @@ test('native newline caret repair preserves surrounding text without a managed r
     page.edit('hi');
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(page.text(), `Keep আমি${newline}হি tail`);
-    assert.equal(page.commands.length, rich ? 2 : 0);
+    // Plain fields use the native command too, which keeps Ctrl+Z working.
+    assert.equal(page.commands.length, 2);
   }
 });
 
@@ -1321,8 +1332,86 @@ test('real shadow suggestion panel accepts a correction through the content inte
   assert.equal(page.text(), 'Keep English: বাংলা tail');
   assert.equal(page.window.document.querySelector('[data-shobdo-suggestions]'), null);
   page.type(' am');
+  // Tab on a word that is already what the user typed must keep moving focus.
   const key = new page.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
   page.root.dispatchEvent(key);
-  assert.equal(key.defaultPrevented, true);
+  assert.equal(key.defaultPrevented, false);
   assert.equal(page.text(), 'Keep English: বাংলা আম tail');
+  assert.equal(page.window.document.querySelector('[data-shobdo-suggestions]'), null);
+  // A real correction is still accepted by Tab.
+  page.type(' banlga');
+  const accept = new page.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+  page.root.dispatchEvent(accept);
+  assert.equal(accept.defaultPrevented, true);
+  assert.equal(page.text(), 'Keep English: বাংলা আম বাংলা tail');
+});
+
+test('maxlength is honoured for converted text and native edits take over at the limit', async t => {
+  const page = await setup('<input type="text" maxlength="4">', { mode: 'bangla' });
+  t.after(() => page.dom.window.close());
+  page.type('ab');
+  assert.equal(page.text(), 'আব');
+  page.type('gh');
+  assert.equal(page.text(), 'আবগহ');
+  assert.equal(page.text().length, 4);
+  // jsdom's native stand-in does not enforce maxlength, so a refused conversion
+  // is visible as a plain Latin character; the point is that we did not convert.
+  const before = page.edit('l');
+  assert.equal(before.defaultPrevented, false);
+  assert.equal(page.text().slice(0, 4), 'আবগহ');
+});
+
+test('fields without maxlength keep converting normally', async t => {
+  const page = await setup('<textarea></textarea>', { mode: 'bangla' });
+  t.after(() => page.dom.window.close());
+  page.type('abgh'.repeat(20));
+  assert.equal(page.text().length, 80);
+});
+
+function installFieldCommand(page, { honour = true } = {}) {
+  const log = [];
+  page.window.document.execCommand = (command, ui, value) => {
+    log.push({ command, value });
+    if (!honour) return false;
+    const field = page.root;
+    const inputType = command === 'delete' ? 'deleteContentBackward' : 'insertText';
+    const before = new page.window.InputEvent('beforeinput', { bubbles: true, composed: true,
+      cancelable: true, inputType, data: command === 'delete' ? null : value });
+    if (!field.dispatchEvent(before)) return false;
+    field.setRangeText(command === 'delete' ? '' : value, field.selectionStart, field.selectionEnd, 'end');
+    field.dispatchEvent(new page.window.InputEvent('input', { bubbles: true, composed: true,
+      inputType, data: command === 'delete' ? null : value }));
+    return true;
+  };
+  return log;
+}
+
+test('text fields edit through the native command (undo-friendly) without duplicate input events', async t => {
+  for (const markup of ['<textarea></textarea>', '<input type="text">']) {
+    const page = await setup(markup, { mode: 'bangla' });
+    t.after(() => page.dom.window.close());
+    const log = installFieldCommand(page);
+    let inputs = 0;
+    page.root.addEventListener('input', () => { inputs += 1; });
+    page.type('ami');
+    assert.equal(page.text(), 'আমি');
+    assert.deepEqual(page.selection(), [3, 3]);
+    assert.ok(log.length >= 3 && log.every(entry => ['insertText', 'delete'].includes(entry.command)));
+    assert.equal(inputs, 3, 'one native input per keystroke, none synthesised on top');
+    page.edit(null, 'deleteContentBackward');
+    assert.equal(page.text(), 'আম');
+    assert.equal(log.at(-1).value, 'আম', 'the shortened word replaces the whole old word natively');
+    page.type(' bangla');
+    assert.equal(page.text(), 'আম বাংলা');
+  }
+});
+
+test('a refused native command on a text field falls back to setRangeText', async t => {
+  const page = await setup('<input type="text">', { mode: 'bangla' });
+  t.after(() => page.dom.window.close());
+  const log = installFieldCommand(page, { honour: false });
+  page.type('ami hi');
+  assert.equal(page.text(), 'আমি হি');
+  assert.ok(log.length > 0);
+  assert.deepEqual(page.selection(), [6, 6]);
 });

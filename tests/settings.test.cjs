@@ -29,7 +29,7 @@ function fixture(initial = {}) {
   const writes = [];
   let failGet = false;
   let failSet = false;
-  function context(background = false) {
+  function context(background = false, action = null) {
     const errors = [];
     const chrome = {
       storage: {
@@ -54,6 +54,7 @@ function fixture(initial = {}) {
       commands: { onCommand: event() },
       runtime: { onInstalled: event(), onStartup: event() },
     };
+    if (action) chrome.action = action;
     const sandbox = vm.createContext({ chrome, console: { error: (...args) => errors.push(args) } });
     sandbox.importScripts = filename => {
       assert.equal(filename, 'settings.js');
@@ -357,4 +358,38 @@ test('popup restores suggestion preference after save and confirmation failures,
   await settle();
   assert.deepEqual(store.data[KEY], { enabled: false, mode: 'bangla', suggestions: true });
   assert.equal(elements['error-box'].hidden, true);
+});
+
+test('toolbar badge mirrors mode and paused state on startup and on every change', async () => {
+  const calls = [];
+  const action = {
+    setBadgeText: async value => { calls.push(['text', value.text]); },
+    setBadgeBackgroundColor: async value => { calls.push(['color', value.color]); },
+    setTitle: async value => { calls.push(['title', value.title]); },
+  };
+  const store = fixture({ [KEY]: { enabled: true, mode: 'bangla', suggestions: true } });
+  const { settings, errors } = store.context(true, action);
+  await settle();
+  assert.deepEqual(calls.filter(call => call[0] === 'text'), [['text', 'BN']]);
+  await settings.update({ mode: 'english' });
+  await settle();
+  await settings.update({ enabled: false });
+  await settle();
+  assert.deepEqual(calls.filter(call => call[0] === 'text').map(call => call[1]), ['BN', 'EN', 'OFF']);
+  assert.ok(calls.some(call => call[0] === 'title' && /paused/.test(call[1])));
+  assert.deepEqual(errors, []);
+});
+
+test('a failing badge update is reported without blocking later work', async () => {
+  const action = {
+    setBadgeText: async () => { throw new Error('No action'); },
+    setBadgeBackgroundColor: async () => {},
+    setTitle: async () => {},
+  };
+  const store = fixture();
+  const { settings, errors } = store.context(true, action);
+  await settle();
+  assert.ok(errors.length >= 1);
+  await settings.update({ mode: 'bangla' });
+  assert.equal((await settings.read()).mode, 'bangla');
 });

@@ -8,7 +8,7 @@ for Chromium browsers: no accounts, no servers, your words never leave the tab.
 ## Install (1 minute)
 
 1. `chrome://extensions` → **Developer mode** → **Load unpacked** → pick the
-   **`extension`** folder (or extract `shobdo-1.1.2.zip` from Releases and pick that).
+   **`extension`** folder (or extract `shobdo-1.1.3.zip` from Releases and pick that).
 2. Pin Shobdo, refresh your open tabs, open the popup → **বাংলা**.
 3. Type anywhere you can type.
 
@@ -18,14 +18,16 @@ Shobdo's card, refresh your tabs.
 ## How it works
 
 - Starts in **English** so it never hijacks normal typing. Flip to বাংলা in the
-  popup or with **Alt+Shift+S**.
+  popup or with **Alt+Shift+S**. The toolbar badge always shows the state:
+  **BN** (Bangla), **EN** (English) or **OFF** (paused).
 - Words convert live as you type; **Backspace** walks the active word back
   letter by letter. Space or punctuation locks the word in.
 - `` `React `` keeps one word English. Passwords, pastes, and IME input are
   never touched.
 - After 2 letters, a suggestion panel offers fixes (`banlga` → বাংলা):
   **↑/↓** pick, **Tab** accept, **Esc** dismiss. It suggests — never autocorrects,
-  learns, or phones home (can be toggled off in the popup).
+  learns, or phones home (can be toggled off in the popup). If the word you
+  typed is already the top match, **Tab** keeps moving focus as usual.
 
 | `tumi kemon acho` | তুমি কেমন আছো |
 | `tomar bhalo` | তোমার ভালো |
@@ -38,8 +40,10 @@ may need the capital form (`sOnar`) or one Tab.
 ## Fine print
 
 Works in inputs, textareas, and most rich editors. Skips Docs/canvas, closed
-shadow roots, and `chrome://` pages. Converted keystrokes aren't guaranteed
-undoable. Only permission is `storage` (3 settings).
+shadow roots, and `chrome://` pages. **Ctrl+Z** undoes converted text one
+keystroke at a time in inputs and textareas; some rich editors manage their own
+undo and may differ. Fields with `maxlength` are respected. Only permission is
+`storage` (3 settings).
 
 ## Hack on it
 
